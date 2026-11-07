@@ -75,7 +75,8 @@ def segment_painting(img):
     # Lit edges of the coat (teal highlights on the shoulders) are lighter than the core: grow into
     # nearby pixels that are not fog-like (fog is pale and unsaturated).
     # Only on the figure: on the crag the same rule eats shadowed fog in its crevices.
-    not_fog = (((L < 112) | ((sat > 80) & (L < 175))) & (ys < 560)).astype(np.uint8) * 255
+    # On the crag: darker-than-fog pixels; lower down only warm ones (shadowed fog in crevices is bluish).
+    not_fog = (((L < 112) | ((sat > 80) & (L < 175))) & ((ys < 560) | ((L < 150) & ((ys < 650) | (b > 131))))).astype(np.uint8) * 255
     for _ in range(3):
         fg_core = fg_core | (cv2.dilate(fg_core, np.ones((9, 9), np.uint8)) & not_fog)
     # Hair and face are light; the walking stick is thin and mid-toned.
@@ -84,7 +85,7 @@ def segment_painting(img):
     stick_box = polygon_mask(img.shape, [[(399, 470), (406, 470), (430, 604), (421, 606)]], k)
     stick = (L < 115) & (stick_box > 0)
     # Neck and white shirt collar are pale like the fog: always solid.
-    neck = polygon_mask(img.shape, [[(337, 330), (362, 330), (363, 340), (368, 347), (366, 352), (332, 352), (331, 348), (336, 340)]], k) > 0
+    neck = polygon_mask(img.shape, [[(338, 328), (362, 328), (364, 340), (372, 350), (366, 354), (326, 354), (324, 350), (332, 344), (338, 341)]], k) > 0
     fg_bin = (fg_core > 0) | head | stick | neck
     fg_bin = cv2.morphologyEx(fg_bin.astype(np.uint8) * 255, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
     # The crag's top ledge is broken by pale grass and wisps: close it hard and fill enclosed holes,
@@ -98,7 +99,12 @@ def segment_painting(img):
     n_h, lab_h, stats, _ = cv2.connectedComponentsWithStats(holes_in, connectivity=4)
     small = np.isin(lab_h, [i for i in range(1, n_h) if stats[i, cv2.CC_STAT_AREA] < 60 * k * k])
     filled = closed | (small.astype(np.uint8) * 255)
-    legs_gap = polygon_mask(img.shape, [[(300, 530), (342, 530), (348, 614), (296, 614)]], k)
+    # Where the trousers touch dark things (fog shadows between the legs, a tree behind the left shin)
+    # only the very dark trousers count as foreground.
+    legs_gap = polygon_mask(img.shape, [
+        [(300, 530), (342, 530), (348, 614), (296, 614)],
+        [(262, 488), (287, 488), (285, 600), (262, 600)],
+    ], k)
     fg_bin = np.where((low > 0) & (legs_gap == 0), filled, fg_bin)
     # Soft edge: fade by luminance inside a slightly grown region, so painted fog over the rim stays fog.
     grown = cv2.dilate(fg_bin, np.ones((7, 7), np.uint8))

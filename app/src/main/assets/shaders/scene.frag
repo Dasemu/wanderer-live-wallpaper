@@ -237,7 +237,8 @@ void main() {
         fa = solidAlpha(fa, fc, 0.25, 0.5);
         fc *= uAmbient;
         float rim = clamp(fa - texture(uMask, pf + lightDirPaint * 0.0025).g, 0.0, 1.0);
-        fc += uLightColor * rim * 0.6 * rimK;
+        // Rim light only on dark rock and cloth: pale bits (grass, wisps) would get a bright cut-out edge.
+        fc += uLightColor * rim * 0.6 * rimK * smoothstep(0.35, 0.1, dot(fc, LUMA));
         col = mix(col, fc, fa);
     }
 
