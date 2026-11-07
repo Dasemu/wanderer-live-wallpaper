@@ -44,6 +44,7 @@ uniform float uFlowTime;       // flow cycles, wrapped
 uniform float uFlowFog;        // flow distance per cycle (painting uv)
 uniform float uFlowSky;
 uniform float uZoom;           // launcher zoom-out, 0..1
+uniform vec4 uSkyline[32];     // 128 painting-v heights of the highest land per column slice, packed by 4
 
 const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
 
@@ -61,6 +62,16 @@ float vnoise(vec2 p) {
     vec2 u = f * f * (3.0 - 2.0 * f);
     return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// 1 above the land skyline (or above the painting), 0 below: sun, moon and stars set behind the land.
+float aboveSkyline(vec2 p) {
+    if (p.y < 0.0) return 1.0;
+    float x = clamp(p.x, 0.0, 1.0) * 127.0;
+    int i = int(floor(x));
+    int j = min(i + 1, 127);
+    float v = mix(uSkyline[i / 4][i % 4], uSkyline[j / 4][j % 4], fract(x));
+    return smoothstep(0.003, -0.003, p.y - v);
 }
 
 vec2 paintUv(vec2 uv, vec4 r) { return vec2(uv.x, 1.0 - uv.y) * r.xy + r.zw; }
@@ -195,12 +206,12 @@ void main() {
     float band = uGlow * uSunVis * 0.35 * exp(-abs(uv.y - uScreenHorizon) * 9.0) * exp(-abs(ds.x) * 2.2);
     col += uSun * (halo * (skyW + 0.5 * fogW + 0.25 * farW) + band * (skyW + fogW));
     float veil = 0.55 + 0.45 * smoothstep(1.12, 0.92, ratio);
-    col = mix(col, uSun * 3.0, smoothstep(0.019, 0.012, dsun) * uSunVis * veil * skyW * skyW);
+    float clear = aboveSkyline(pp);
+    col = mix(col, uSun * 3.0, smoothstep(0.019, 0.012, dsun) * uSunVis * veil * clear);
 
     if (uStars > 0.001) {
-        // Pale summits read as sky in the mask, so stars stop above the highest peak.
         float gaps = smoothstep(1.2, 0.9, ratio);
-        col += vec3(0.85, 0.9, 1.0) * stars(uv) * uStars * skyW * skyW * gaps * smoothstep(0.27, 0.21, ppx.y);  // none below the summits (painting v)
+        col += vec3(0.85, 0.9, 1.0) * stars(uv) * uStars * clear * gaps;
     }
     if (uMoonVis > 0.001) {
         float disk;
@@ -208,7 +219,7 @@ void main() {
         float illum = 0.5 * (1.0 - cos(uMoonPhase * 6.2831853));
         float dm = length((uv - uMoonPos) * aspectV);
         col += vec3(0.55, 0.65, 0.85) * 0.12 * illum * exp(-dm * 9.0) * uMoonVis * (skyW + 0.5 * fogW);
-        col = mix(col, mc, disk * uMoonVis * skyW * veil);
+        col = mix(col, mc, disk * uMoonVis * clear * veil);
         // Silver lining: clouds near the moon glow instead of darkening its disc.
         col += vec3(0.75, 0.8, 0.95) * cloudLit * 1.6 * illum * exp(-dm * 7.0) * uMoonVis * skyW;
     }

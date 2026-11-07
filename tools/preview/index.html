@@ -49,7 +49,7 @@ function render(){
  const elev=Math.sin(Math.PI*(m-Rm)/(Sm-Rm))*0.55-0.02; /* rough stand-in for the real elevation, negative all night */const dayP=(m-Rm)/(Sm-Rm);
  const sunX=0.5+(dayP-0.5)*0.9, sunY=screenHorizon+0.42*elev, sunVis=sm(-0.12,0.02,elev);
  const nightLen=1440-(Sm-Rm), np=(((m-Sm)%1440)+1440)%1440/nightLen, arc=np<=1?Math.sin(Math.PI*np):-0.3;
- const moonX=0.15+0.7*Math.min(1,np), moonY=screenHorizon-0.04+0.42*arc, moonVis=sm(-0.05,-0.15,elev)*sm(-0.1,0.15,arc), phase=0.42;
+ const moonX=0.15+0.7*Math.min(1,np), moonY=(1-(cfg.moonFloor-rp[3])/rp[1])+0.03+0.3*Math.max(arc,0), moonVis=sm(-0.05,-0.15,elev)*sm(-0.1,0.15,arc), phase=0.42;
  const illum=0.5*(1-Math.cos(2*Math.PI*phase)), mw=moonVis*(0.25+0.75*illum), tot=Math.max(sunVis+mw,1e-4);
  const lx=(sunX*sunVis+moonX*mw)/tot, ly=(sunY*sunVis+moonY*mw)/tot, lc=P.sun.map((v,i)=>v*sunVis+[0.55,0.65,0.9][i]*mw*0.45);
  const wrap=v=>((v%32)+32)%32, d=cfg.drift;
@@ -67,7 +67,7 @@ function render(){
  gl.uniform1f(u(pScene,'uSunVis'),sunVis);gl.uniform1f(u(pScene,'uMoonVis'),moonVis);gl.uniform1f(u(pScene,'uMoonPhase'),phase);
  gl.uniform1f(u(pScene,'uScreenAspect'),W/H);gl.uniform1f(u(pScene,'uPaintAspect'),pa);gl.uniform1f(u(pScene,'uScreenHorizon'),screenHorizon);
  gl.uniform1f(u(pScene,'uHorizon'),cfg.horizon);gl.uniform1f(u(pScene,'uSkyRef'),cfg.skyRef);gl.uniform1f(u(pScene,'uTime'),sec%628.3);
- gl.uniform1f(u(pScene,'uFlowTime'),(sec/cfg.flow.periodSeconds)%1000);gl.uniform1f(u(pScene,'uFlowFog'),cfg.flow.fog);gl.uniform1f(u(pScene,'uFlowSky'),cfg.flow.sky);gl.uniform1f(u(pScene,'uZoom'),0);
+ gl.uniform1f(u(pScene,'uFlowTime'),(sec/cfg.flow.periodSeconds)%1000);gl.uniform1f(u(pScene,'uFlowFog'),cfg.flow.fog);gl.uniform1f(u(pScene,'uFlowSky'),cfg.flow.sky);gl.uniform1f(u(pScene,'uZoom'),0);gl.uniform4fv(u(pScene,'uSkyline[0]'),cfg.skyline);
  gl.drawArrays(gl.TRIANGLES,0,3);
  document.getElementById('info').textContent=`sun ${sunX.toFixed(2)},${sunY.toFixed(2)} vis ${sunVis.toFixed(2)}\nhorizon ${screenHorizon.toFixed(3)}`;
  }

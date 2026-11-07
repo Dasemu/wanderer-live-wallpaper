@@ -76,7 +76,7 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
             "uSkyTop", "uSkyHorizon", "uSun", "uAmbient", "uFogLit", "uFogShadow", "uLightColor",
             "uGlow", "uStars", "uHaze", "uSunPos", "uMoonPos", "uLightPos", "uSunVis", "uMoonVis",
             "uMoonPhase", "uScreenAspect", "uPaintAspect", "uScreenHorizon", "uHorizon", "uSkyRef",
-            "uTime", "uFlowTime", "uFlowFog", "uFlowSky", "uZoom",
+            "uTime", "uFlowTime", "uFlowFog", "uFlowSky", "uZoom", "uSkyline",
         )
         // Called once per GL context (first surface, or after a context loss): any old handles
         // belong to a dead context, so forget them and reload.
@@ -170,6 +170,7 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
         glUniform1f(sceneU.getValue("uFlowFog"), config.flowFog)
         glUniform1f(sceneU.getValue("uFlowSky"), config.flowSky)
         glUniform1f(sceneU.getValue("uZoom"), input.zoom)
+        glUniform4fv(sceneU.getValue("uSkyline"), config.skyline.size / 4, config.skyline, 0)
         glDrawArrays(GL_TRIANGLES, 0, 3)
     }
 

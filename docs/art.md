@@ -51,7 +51,9 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/art/requirements.txt
 .venv/bin/python tools/art/build_scene.py layers --sky sky.png --far far.png --fog fog.png --mid mid.png --fg fg.png --debug sheet.jpg
 ```
 
-The script prints a `skyRef` value. Put it into `app/src/main/assets/scene.json` and set `horizon` there too:
+The script also writes `skyline` into `app/src/main/assets/scene.json`: for 128 slices of the width,
+the highest point of land. The sun, moon and stars are drawn only above it, so they set behind your
+mountains. It prints a `skyRef` value too. Put it into `app/src/main/assets/scene.json` and set `horizon` there too:
 the row where the far fog meets the sky, as a fraction of the canvas height from the top (0.44 for the painting).
 Then check the result in `tools/preview/` and rebuild the APK.
 

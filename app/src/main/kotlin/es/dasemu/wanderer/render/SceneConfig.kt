@@ -21,6 +21,8 @@ class SceneConfig(
     val driftWisps: FloatArray,
     val driftWarp: FloatArray,
     val cropAnchorV: Float,
+    /** Painting v of the highest land per column slice; sun, moon and stars are drawn only above it. */
+    val skyline: FloatArray,
 ) {
     companion object {
         fun parse(json: String): SceneConfig {
@@ -49,6 +51,8 @@ class SceneConfig(
                 driftWisps = pair("wisps"),
                 driftWarp = pair("warp"),
                 cropAnchorV = o.getDouble("cropAnchorV").toFloat(),
+                skyline = o.getJSONArray("skyline").let { a -> FloatArray(a.length()) { a.getDouble(it).toFloat() } }
+                    .also { require(it.size == 128) { "skyline must have 128 values, got ${it.size}" } },
             )
         }
     }

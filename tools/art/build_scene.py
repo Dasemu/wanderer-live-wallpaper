@@ -152,7 +152,7 @@ def segment_painting(img):
     band = smoothstep(228, 250, ys) * smoothstep(432, 405, ys)
     far = smoothstep(206, 168, L) * band * (1 - fg) * (1 - mid)
     # The big mountain's summit and the rock pinnacle are nearly as pale as the sky, so the threshold
-    # misses them; their traced outlines keep the sun, moon and stars behind them.
+    # misses them. They stay relit as (hazy) sky, but their traced outlines feed the skyline.
     peaks = polygon_mask(img.shape, [
         [(0, 287), (30, 293), (70, 299), (110, 297), (140, 287), (165, 271), (185, 258), (197, 251),
          (212, 250), (225, 255), (240, 265), (262, 278), (285, 290), (310, 304), (335, 320), (360, 334),
@@ -162,13 +162,12 @@ def segment_painting(img):
     ], k).astype(np.float32) / 255.0
     # Fade out downward: below the summits the mountains dissolve into the haze anyway.
     peaks = cv2.GaussianBlur(peaks, (0, 0), 1.5) * smoothstep(350, 305, ys) * (1 - fg)
-    far = np.maximum(far, peaks)
     far = cv2.GaussianBlur(far.astype(np.float32), (0, 0), 3)
 
     # Sky weight: the painted sky above the mountains (relit as sky rather than as fog).
-    sky = smoothstep(395, 300, ys) * np.ones_like(L) * (1 - far) * (1 - peaks) * (1 - fg)
+    sky = smoothstep(395, 300, ys) * np.ones_like(L) * (1 - far) * (1 - fg)
     sky = cv2.GaussianBlur(sky.astype(np.float32), (0, 0), 6)
-    return mid, fg, sky, far
+    return mid, fg, sky, far, peaks
 
 
 def build_plate(base, mid, fg):
@@ -228,6 +227,22 @@ def pack_layers(args):
     return (base * 255).astype(np.uint8), (plate * 255).astype(np.uint8), mid[..., 3], fg[..., 3], sky_w, far_w
 
 
+SKYLINE_SAMPLES = 128
+SCENE_JSON = os.path.join(os.path.dirname(__file__), "..", "..", "app", "src", "main", "assets", "scene.json")
+
+
+def write_skyline(values):
+    """Store the skyline (painting v per column slice) in scene.json, keeping the rest of the file."""
+    import json
+    with open(SCENE_JSON) as f:
+        cfg = json.load(f)
+    cfg["skyline"] = [round(v, 4) for v in values]
+    with open(SCENE_JSON, "w") as f:
+        json.dump(cfg, f, indent=2)
+        f.write("\n")
+    print(f"wrote {len(values)}-point skyline to {os.path.abspath(SCENE_JSON)}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="mode", required=True)
@@ -252,13 +267,14 @@ def main():
             s = args.max_width / base.shape[1]
             base = cv2.resize(base, None, fx=s, fy=s, interpolation=cv2.INTER_AREA)
         # Segment the whole scan (the hand-drawn polygons assume it), then crop its borders.
-        mid, fg, sky, far = segment_painting(base)
+        mid, fg, sky, far, peaks = segment_painting(base)
         plate = build_plate(base.astype(np.float32), mid, fg)
         th, tw = int(base.shape[0] * args.trim), int(base.shape[1] * args.trim)
         crop = (slice(th, base.shape[0] - th), slice(tw, base.shape[1] - tw))
-        base, plate, mid, fg, sky, far = (a[crop] for a in (base, plate, mid, fg, sky, far))
+        base, plate, mid, fg, sky, far, peaks = (a[crop] for a in (base, plate, mid, fg, sky, far, peaks))
     else:
         base, plate, mid, fg, sky, far = pack_layers(args)
+        peaks = np.zeros_like(far)
 
     os.makedirs(args.out, exist_ok=True)
     mask = np.dstack([sky, fg, mid, far])  # OpenCV writes BGRA, so this is R=mid G=fg B=sky A=far
@@ -281,6 +297,16 @@ def main():
     sky_ref = float((lin * sky).sum() / max(sky.sum(), 1e-6))
     print(f"wrote scene textures ({base.shape[1]}x{base.shape[0]}) to {os.path.abspath(args.out)}")
     print(f'set "skyRef": {sky_ref:.3f} in app/src/main/assets/scene.json')
+
+    # Skyline: per column, the highest point of mountains / ridges / everything below the sky. The sun,
+    # moon and stars are only drawn above it, so they set behind the land instead of shining through
+    # pale summits or haze. The wanderer is not part of it (he is drawn on top anyway).
+    land = (far > 0.35) | (peaks > 0.5) | (sky < 0.5) & (fg < 0.5)
+    h = land.shape[0]
+    first = np.where(land.any(axis=0), land.argmax(axis=0), h)
+    cols = np.array_split(np.arange(land.shape[1]), SKYLINE_SAMPLES)
+    skyline = [float(np.min(first[c])) / h for c in cols]  # highest land in each slice
+    write_skyline(skyline)
 
 
 if __name__ == "__main__":
