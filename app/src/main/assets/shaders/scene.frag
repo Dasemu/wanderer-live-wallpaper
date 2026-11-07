@@ -145,7 +145,9 @@ void main() {
     vec2 toLight = (uLightPos - uv) * aspectV;
     vec2 lightDir = toLight / max(length(toLight), 1e-4);
     vec2 lightDirPaint = vec2(lightDir.x, -lightDir.y * uPaintAspect);
-    float scatter = exp(-length(toLight) * 3.2);
+    // A sun or moon hidden behind the land lights the sky above the ridge, not the fog in front of it.
+    float lightClear = aboveSkyline(paintUv(uLightPos, uRectPlate));
+    float scatter = exp(-length(toLight) * 3.2) * mix(0.15, 1.0, lightClear);
 
     // ---- Plate: sky, far mountains and painted fog.
     vec2 pp = paintUv(uv, uRectPlate);
@@ -204,9 +206,11 @@ void main() {
     float dsun = length(ds);
     float halo = uGlow * uSunVis * (0.45 * exp(-dsun * 5.0) + 0.4 * exp(-dsun * 18.0));
     float band = uGlow * uSunVis * 0.35 * exp(-abs(uv.y - uScreenHorizon) * 9.0) * exp(-abs(ds.x) * 2.2);
-    col += uSun * (halo * (skyW + 0.5 * fogW + 0.25 * farW) + band * (skyW + fogW));
-    float veil = 0.55 + 0.45 * smoothstep(1.12, 0.92, ratio);
     float clear = aboveSkyline(pp);
+    float sunClear = aboveSkyline(paintUv(uSunPos, uRectPlate));
+    float land = 1.0 - clear;
+    col += uSun * (halo * (clear + land * sunClear * 0.5) + band * (clear + land * sunClear));
+    float veil = 0.55 + 0.45 * smoothstep(1.12, 0.92, ratio);
     col = mix(col, uSun * 3.0, smoothstep(0.019, 0.012, dsun) * uSunVis * veil * clear);
 
     if (uStars > 0.001) {
@@ -218,7 +222,8 @@ void main() {
         vec3 mc = moon(uv, disk);
         float illum = 0.5 * (1.0 - cos(uMoonPhase * 6.2831853));
         float dm = length((uv - uMoonPos) * aspectV);
-        col += vec3(0.55, 0.65, 0.85) * 0.12 * illum * exp(-dm * 9.0) * uMoonVis * (skyW + 0.5 * fogW);
+        float moonClear = aboveSkyline(paintUv(uMoonPos, uRectPlate));
+        col += vec3(0.55, 0.65, 0.85) * 0.12 * illum * exp(-dm * 9.0) * uMoonVis * (clear + land * moonClear * 0.5);
         col = mix(col, mc, disk * uMoonVis * clear * veil);
         // Silver lining: clouds near the moon glow instead of darkening its disc.
         col += vec3(0.75, 0.8, 0.95) * cloudLit * 1.6 * illum * exp(-dm * 7.0) * uMoonVis * skyW;
