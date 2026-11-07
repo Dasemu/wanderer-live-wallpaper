@@ -46,7 +46,7 @@ function render(){
  const par=+document.getElementById('px').value;const P=palette(m);
  const rp=rect(par,cfg.parallax.plate),rm=rect(par,cfg.parallax.mid),rf=rect(par,cfg.parallax.fg);
  const screenHorizon=1-(cfg.horizon-rp[3])/rp[1];
- const elev=Math.sin(Math.PI*Math.min(1,Math.max(-0.2,(m-Rm)/(Sm-Rm))))*0.55-0.02;const dayP=(m-Rm)/(Sm-Rm);
+ const elev=Math.sin(Math.PI*(m-Rm)/(Sm-Rm))*0.55-0.02; /* rough stand-in for the real elevation, negative all night */const dayP=(m-Rm)/(Sm-Rm);
  const sunX=0.5+(dayP-0.5)*0.9, sunY=screenHorizon+0.42*elev, sunVis=sm(-0.12,0.02,elev);
  const nightLen=1440-(Sm-Rm), np=(((m-Sm)%1440)+1440)%1440/nightLen, arc=np<=1?Math.sin(Math.PI*np):-0.3;
  const moonX=0.15+0.7*Math.min(1,np), moonY=screenHorizon-0.04+0.42*arc, moonVis=sm(-0.05,-0.15,elev)*sm(-0.1,0.15,arc), phase=0.42;

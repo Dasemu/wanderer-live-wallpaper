@@ -67,6 +67,18 @@ class SkyModelTest {
     }
 
     @Test
+    fun moonMovesSmoothlyThroughMidnight() {
+        val before = SkyState().also { model.evaluate(at(23, 59), madrid, it) }
+        val after = SkyState().also {
+            model.evaluate(ZonedDateTime.of(2026, 11, 8, 0, 0, 0, 0, madrid.zone).toInstant().toEpochMilli(), madrid, it)
+        }
+        assertEquals(before.moonX, after.moonX, 0.01f)
+        assertEquals(before.moonY, after.moonY, 0.01f)
+        assertEquals(before.moonVisibility, after.moonVisibility, 0.01f)
+        assertTrue(before.moonVisibility > 0.5f)
+    }
+
+    @Test
     fun paletteParsingConvertsSrgbToLinear() {
         val white = Palette.srgbToLinear(1f)
         val mid = Palette.srgbToLinear(0.5f)
