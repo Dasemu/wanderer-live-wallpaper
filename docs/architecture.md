@@ -6,7 +6,7 @@
    (1/5 and 3 noise octaves in battery saver): haze over the far mountains, a fog sea that covers the mid
    rocks' bases, wisps around the crag, and a noise channel that de-syncs the flow map.
 2. `assets/shaders/scene.frag` is one full-screen triangle. Back to front, it draws:
-   - the plate (sky, mountains and painted fog), relit per region, with the fog moved by a two-phase flow map;
+   - the plate (sky, mountains, mid rocks and painted fog), relit per region, with the fog moved by a two-phase flow map that stays still next to rocks and the figure;
    - the sun, the moon (with its real phase) and the stars;
    - the procedural haze;
    - the mid rocks;

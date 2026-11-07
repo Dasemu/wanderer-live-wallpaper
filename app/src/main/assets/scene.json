@@ -3,7 +3,7 @@
   "horizon": 0.44,
   "skyRef": 0.594,
   "visibleWidth": 0.8,
-  "parallax": { "plate": 0.6, "mid": 0.8, "fg": 1.0 },
+  "parallax": { "plate": 0.6, "mid": 0.6, "fg": 1.0 },
   "flow": { "fog": 0.03, "sky": 0.012, "periodSeconds": 14.0 },
   "drift": { "haze": [0.006, 0.0], "sea": [0.02, -0.004], "wisps": [0.03, 0.0], "warp": [0.004, 0.002] },
   "cropAnchorV": 0.6

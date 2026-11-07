@@ -3,7 +3,7 @@
 
 Outputs (in app/src/main/res/drawable-nodpi/ by default):
   scene_base.webp   full painting, colour (rocks, wanderer and far mountains are read from here)
-  scene_plate.webp  the painting with mid rocks and foreground removed and filled with fog;
+  scene_plate.webp  the painting with the foreground removed and filled with fog;
                     the shader animates this layer (fog flow) and draws the solid layers on top
   scene_mask.png    RGBA: R = mid rocks alpha, G = foreground alpha, B = sky weight, A = far mountains
 
@@ -162,8 +162,10 @@ def segment_painting(img):
 def build_plate(base, mid, fg):
     # Grow the holes just enough to swallow the soft edges; a wider ring of smooth fill would read
     # as a halo around the wanderer.
-    # Only cut out solid rock: fog drifting in front of the mid rocks (partial alpha) stays painted.
-    holes = (mid > 0.45) | (fg > 0.05)
+    # Only the foreground is cut out (it moves with its own parallax). The mid rocks stay painted in the
+    # plate: they share its parallax, the fog does not flow next to them, and any translucent rock
+    # edge then shows the same rock underneath instead of a light seam of filled-in fog.
+    holes = fg > 0.05
     holes = cv2.dilate(holes.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0
     known = (~holes).astype(np.float32)
     filled = push_pull_fill(base, known)

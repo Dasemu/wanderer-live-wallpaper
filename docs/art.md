@@ -5,7 +5,7 @@ The app renders three textures from `app/src/main/res/drawable-nodpi/`:
 | File | Content |
 |---|---|
 | `scene_base.webp` | The full image, in colour. Rocks, the figure and the far mountains are read from here. |
-| `scene_plate.webp` | The image without the mid rocks and the foreground, with fog filled in behind them. The shader makes this layer flow. |
+| `scene_plate.webp` | The image without the foreground, with fog filled in behind it. The shader makes its fog flow, except next to rocks and the figure. |
 | `scene_mask.png` | RGBA masks. R = mid rocks, G = foreground, B = sky, A = far mountains. Anything else in the plate counts as fog. |
 
 `tools/art/build_scene.py` builds all three. Do not edit them by hand.
