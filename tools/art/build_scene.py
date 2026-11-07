@@ -122,14 +122,29 @@ def segment_painting(img):
     # Between the legs only the dark trousers are solid; grey fog there must stay see-through.
     # (the shadowed fog there is mid-grey, L ~95-125; the trousers are ~50)
     fg = np.where(legs_gap > 0, fg * smoothstep(88, 66, L), fg)
+    # The trousers have a thin lit rim painted along their edge: keep a couple of pixels around the
+    # dark core, or that rim is lost and the fog behind reads as a halo.
+    core = ((L < 80) & (legs_gap > 0)).astype(np.uint8)
+    n_c, lab_c, st_c, _ = cv2.connectedComponentsWithStats(core, connectivity=8)
+    core = np.isin(lab_c, [i for i in range(1, n_c) if st_c[i, cv2.CC_STAT_AREA] > 400 * k * k]).astype(np.uint8)
+    rim = cv2.dilate(core, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) & (legs_gap > 0)
+    fg = np.where(rim > 0, np.maximum(fg, cv2.GaussianBlur(rim.astype(np.float32), (0, 0), 1.0)), fg)
+    # Pale, cool pixels on the crag are wisps of fog lying on the rock, not rock.
+    crag_wisps = smoothstep(135, 160, L) * (1 - smoothstep(40, 70, sat)) * (b < 134) * (ys > 580)
+    fg = fg * (1 - crag_wisps)
+    # ...except one cool, pale lump of rock at the top-left of the ledge.
+    lump = polygon_mask(img.shape, [[(172, 603), (180, 599), (206, 599), (209, 606), (207, 614), (171, 617)]], k)
+    fg = np.maximum(fg, (lump > 0) * smoothstep(168, 146, L))
     fg = cv2.GaussianBlur(fg.astype(np.float32), (0, 0), 0.8)
 
     # Mid rocks and trees: darker than the fog, inside two hand-drawn hulls.
     hulls = polygon_mask(img.shape, [
-        [(0, 395), (120, 395), (215, 470), (300, 515), (310, 625), (0, 625)],
+        [(0, 395), (120, 395), (215, 445), (300, 470), (310, 625), (0, 625)],
         [(405, 425), (700, 425), (700, 560), (405, 560)],
     ], k)
-    fg_zone = cv2.dilate((fg > 0.5).astype(np.uint8), np.ones((3, 3), np.uint8))
+    # Let the mid layer run a few pixels under the foreground: the figure is drawn on top, and a gap
+    # between the two would show the smooth fill as a light seam.
+    fg_zone = cv2.erode((fg > 0.5).astype(np.uint8), np.ones((9, 9), np.uint8))
     mid = smoothstep(178, 112, L) * (hulls > 0) * (1 - fg_zone)
     mid = cv2.GaussianBlur(mid.astype(np.float32), (0, 0), 1.0)
 
@@ -147,7 +162,8 @@ def segment_painting(img):
 def build_plate(base, mid, fg):
     # Grow the holes just enough to swallow the soft edges; a wider ring of smooth fill would read
     # as a halo around the wanderer.
-    holes = np.maximum(mid, fg) > 0.05
+    # Only cut out solid rock: fog drifting in front of the mid rocks (partial alpha) stays painted.
+    holes = (mid > 0.45) | (fg > 0.05)
     holes = cv2.dilate(holes.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0
     known = (~holes).astype(np.float32)
     filled = push_pull_fill(base, known)
