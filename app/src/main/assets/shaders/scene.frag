@@ -64,14 +64,24 @@ float vnoise(vec2 p) {
                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
+float skylineAt(float u) {
+    float x = clamp(u, 0.0, 1.0) * 127.0;
+    int i = int(floor(x));
+    int j = min(i + 1, 127);
+    return mix(uSkyline[i / 4][i % 4], uSkyline[j / 4][j % 4], fract(x));
+}
+
 // 1 above the land skyline (or above the painting), 0 below: sun, moon and stars set behind the land.
 float aboveSkyline(vec2 p) {
     if (p.y < 0.0) return 1.0;
-    float x = clamp(p.x, 0.0, 1.0) * 127.0;
-    int i = int(floor(x));
-    int j = min(i + 1, 127);
-    float v = mix(uSkyline[i / 4][i % 4], uSkyline[j / 4][j % 4], fract(x));
-    return smoothstep(0.003, -0.003, p.y - v);
+    return smoothstep(0.003, -0.003, p.y - skylineAt(p.x));
+}
+
+// How much a light source at painting position p shines past the land: eases in as it rises clear of
+// the skyline (about its own diameter), so the scene's lighting never switches abruptly.
+float lightClearance(vec2 p) {
+    if (p.y < 0.0) return 1.0;
+    return smoothstep(-0.015, 0.06, skylineAt(p.x) - p.y);
 }
 
 vec2 paintUv(vec2 uv, vec4 r) { return vec2(uv.x, 1.0 - uv.y) * r.xy + r.zw; }
@@ -146,7 +156,7 @@ void main() {
     vec2 lightDir = toLight / max(length(toLight), 1e-4);
     vec2 lightDirPaint = vec2(lightDir.x, -lightDir.y * uPaintAspect);
     // A sun or moon hidden behind the land lights the sky above the ridge, not the fog in front of it.
-    float lightClear = aboveSkyline(paintUv(uLightPos, uRectPlate));
+    float lightClear = lightClearance(paintUv(uLightPos, uRectPlate));
     float scatter = exp(-length(toLight) * 3.2) * mix(0.15, 1.0, lightClear);
 
     // ---- Plate: sky, far mountains and painted fog.
@@ -207,7 +217,7 @@ void main() {
     float halo = uGlow * uSunVis * (0.45 * exp(-dsun * 5.0) + 0.4 * exp(-dsun * 18.0));
     float band = uGlow * uSunVis * 0.35 * exp(-abs(uv.y - uScreenHorizon) * 9.0) * exp(-abs(ds.x) * 2.2);
     float clear = aboveSkyline(pp);
-    float sunClear = aboveSkyline(paintUv(uSunPos, uRectPlate));
+    float sunClear = lightClearance(paintUv(uSunPos, uRectPlate));
     float land = 1.0 - clear;
     col += uSun * (halo * (clear + land * sunClear * 0.5) + band * (clear + land * sunClear));
     float veil = 0.55 + 0.45 * smoothstep(1.12, 0.92, ratio);
@@ -222,7 +232,7 @@ void main() {
         vec3 mc = moon(uv, disk);
         float illum = 0.5 * (1.0 - cos(uMoonPhase * 6.2831853));
         float dm = length((uv - uMoonPos) * aspectV);
-        float moonClear = aboveSkyline(paintUv(uMoonPos, uRectPlate));
+        float moonClear = lightClearance(paintUv(uMoonPos, uRectPlate));
         col += vec3(0.55, 0.65, 0.85) * 0.12 * illum * exp(-dm * 9.0) * uMoonVis * (clear + land * moonClear * 0.5);
         col = mix(col, mc, disk * uMoonVis * clear * veil);
         // Silver lining: clouds near the moon glow instead of darkening its disc.
