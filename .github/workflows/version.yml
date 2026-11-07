@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   bump:
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
     if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +42,10 @@ jobs:
           echo "$v" > VERSION
           git commit -am "chore(release): v$v [skip ci]"
           git push origin HEAD:${GITHUB_REF_NAME}
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            git tag "v$v"
+            git push origin "v$v"
+          fi
           echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Sync development with main
         if: github.ref_name == 'main'
@@ -48,3 +54,40 @@ jobs:
           git checkout -B development origin/development
           git merge --no-edit -m "chore: merge main into development [skip ci]" origin/main
           git push origin development
+
+  # Production release: every version that lands on main gets a signed, minified APK on GitHub Releases.
+  release:
+    needs: bump
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.bump.outputs.version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Restore signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.WANDERER_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Missing secret WANDERER_KEYSTORE_BASE64 (see docs/releases.md)"; exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+      - name: Build signed release APK
+        env:
+          WANDERER_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          WANDERER_KEYSTORE_PASSWORD: ${{ secrets.WANDERER_KEYSTORE_PASSWORD }}
+          WANDERER_KEY_ALIAS: ${{ secrets.WANDERER_KEY_ALIAS }}
+          WANDERER_KEY_PASSWORD: ${{ secrets.WANDERER_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.bump.outputs.version }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "wanderer-$VERSION.apk"
+          gh release create "v$VERSION" "wanderer-$VERSION.apk" --title "v$VERSION" --generate-notes
