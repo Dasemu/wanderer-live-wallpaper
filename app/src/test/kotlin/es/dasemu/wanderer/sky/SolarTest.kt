@@ -30,6 +30,16 @@ class SolarTest {
     }
 
     @Test
+    fun daylightSavingShiftsLocalSunTimesByAnHour() {
+        // Spain moves to CEST on 2026-03-29 and back to CET on 2026-10-25.
+        fun t(y: Int, m: Int, d: Int) = Solar.sunTimes(LocalDate.of(y, m, d), madrid.latitude, madrid.longitude, madrid.zone)
+        val springDelta = t(2026, 3, 29).sunrise!! - t(2026, 3, 28).sunrise!!
+        val autumnDelta = t(2026, 10, 25).sunset!! - t(2026, 10, 24).sunset!!
+        assertEquals(60.0 - 1.5, springDelta, 1.0)   // +1 h, minus the ~1.5 min/day of spring
+        assertEquals(-60.0 - 1.5, autumnDelta, 1.0)  // -1 h, minus the ~1.5 min/day of autumn
+    }
+
+    @Test
     fun polarNightHasNoSunrise() {
         val t = Solar.sunTimes(LocalDate.of(2026, 12, 21), 78.2, 15.6, ZoneId.of("Arctic/Longyearbyen"))
         assertNull(t.sunrise)
