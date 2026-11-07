@@ -81,7 +81,8 @@ void main() {
     // Fog sea that swallows the bases of the mid rocks.
     if (pv.y > h + 0.03 && pv.y < 0.86) {
         float d = fogPlane(pv, uOffset1, 1.0, 0.5, 0.28);
-        float band = smoothstep(h + 0.03, h + 0.1, pv.y) * smoothstep(0.86, 0.7, pv.y);
+        // Start low: higher up the plane compresses into flat horizontal streaks across the rocks.
+        float band = smoothstep(h + 0.16, h + 0.26, pv.y) * smoothstep(0.86, 0.7, pv.y);
         sea = d * band;
     }
     // Thin wisps drifting past the wanderer's crag.

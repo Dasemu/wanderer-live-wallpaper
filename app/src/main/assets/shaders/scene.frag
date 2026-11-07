@@ -84,7 +84,8 @@ float starLayer(vec2 p, float density, float sizeMin, float sizeMax, float gain)
     vec2 pos = vec2(hash(cell + 1.7), hash(cell + 9.2)) * 0.7 + 0.15;
     float size = mix(sizeMin, sizeMax, pow(hash(cell + 4.1), 4.0));
     float d = length(fract(p) - pos);
-    float twinkle = 0.6 + 0.4 * sin(uTime * (0.7 + 2.8 * hash(cell + 3.3)) + h * 80.0);
+    // Whole-number rates (rad/s) so wrapping uTime at 200π never makes the twinkle jump.
+    float twinkle = 0.6 + 0.4 * sin(uTime * floor(1.0 + 3.0 * hash(cell + 3.3)) + h * 80.0);
     float bright = 0.3 + 0.7 * hash(cell + 6.6);
     return smoothstep(size, 0.0, d) * twinkle * bright * gain;
 }

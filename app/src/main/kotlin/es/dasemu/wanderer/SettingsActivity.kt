@@ -149,7 +149,10 @@ class SettingsActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeL
         sunLabel = findViewById(R.id.sun_label)
         hoursGroup = findViewById(R.id.hours_group)
         val location = prefs.getString(Prefs.HOURS_MODE, Prefs.MODE_FIXED) == Prefs.MODE_LOCATION
-        hoursGroup.check(if (location && LocationHelper.hasPermission(this)) R.id.hours_location else R.id.hours_fixed)
+        val granted = LocationHelper.hasPermission(this)
+        // Permission revoked in system settings: fall back to fixed hours so UI and wallpaper agree.
+        if (location && !granted) prefs.edit().putString(Prefs.HOURS_MODE, Prefs.MODE_FIXED).apply()
+        hoursGroup.check(if (location && granted) R.id.hours_location else R.id.hours_fixed)
         hoursGroup.setOnCheckedChangeListener { _, id ->
             if (id == R.id.hours_location && !LocationHelper.hasPermission(this)) {
                 requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), REQ_LOCATION)
@@ -187,13 +190,22 @@ class SettingsActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeL
         loop.requestRender()
     }
 
+    private val powerReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context, intent: Intent) {
+            controller.lowPower = getSystemService(PowerManager::class.java).isPowerSaveMode
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        controller.lowPower = getSystemService(PowerManager::class.java).isPowerSaveMode
+        registerReceiver(powerReceiver, android.content.IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED))
         loop.setVisible(true)
     }
 
     override fun onPause() {
         loop.setVisible(false)
+        unregisterReceiver(powerReceiver)
         super.onPause()
     }
 

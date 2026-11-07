@@ -127,23 +127,25 @@ class SkyModel(palettes: Map<String, Palette>) {
     }
 
     private fun blend(minute: Double, out: Palette) {
-        // Night covers both ends, so map anything outside the keyframes to night.
-        var m = minute
-        if (m < keys.first().minute) m += 1440.0
-        if (m >= keys.last().minute) {
-            out.copyFrom(night)
-            return
+        // Keys can spill past either midnight (e.g. sunrise before 01:40 or dusk after 22:20),
+        // so try the minute in yesterday's, today's and tomorrow's frame.
+        for (m in doubleArrayOf(minute, minute + 1440.0, minute - 1440.0)) {
+            if (blendAt(m, out)) return
         }
+        out.copyFrom(night)
+    }
+
+    private fun blendAt(m: Double, out: Palette): Boolean {
         for (i in 0 until keys.size - 1) {
             val a = keys[i]
             val b = keys[i + 1]
             if (m >= a.minute && m < b.minute) {
                 val t = smoothstep(a.minute, b.minute, m).toFloat()
                 out.setLerp(a.palette, b.palette, t)
-                return
+                return true
             }
         }
-        out.copyFrom(night)
+        return false
     }
 
     companion object {

@@ -76,9 +76,14 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
             "uMoonPhase", "uScreenAspect", "uPaintAspect", "uScreenHorizon", "uHorizon", "uSkyRef",
             "uTime", "uFlowTime", "uFlowFog", "uFlowSky", "uZoom",
         )
-        // Every surface gets a fresh context, so textures must be (re)loaded.
+        // Called once per GL context (first surface, or after a context loss): any old handles
+        // belong to a dead context, so forget them and reload.
         loadedForWidth = 0
         fbo = 0
+        texFog = 0
+        texBase = 0
+        texPlate = 0
+        texMask = 0
     }
 
     fun onSurfaceChanged(w: Int, h: Int) {

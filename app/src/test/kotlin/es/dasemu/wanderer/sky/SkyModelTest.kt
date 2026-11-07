@@ -41,6 +41,22 @@ class SkyModelTest {
     }
 
     @Test
+    fun blendingIsContinuousWhenKeysCrossMidnight() {
+        // Sunrise around 23:30 local the previous day: the dawn ramp spills before midnight.
+        val place = Place(65.0, 0.0, java.time.ZoneId.of("Etc/GMT+2"))
+        val m = SkyModel(palettes)
+        fun at(minute: Int) = SkyState().also {
+            val t = ZonedDateTime.of(2026, 6, 10, minute / 60, minute % 60, 0, 0, place.zone)
+            m.evaluate(t.toInstant().toEpochMilli(), place, it)
+        }.palette.values
+        val beforeMidnight = SkyState().also {
+            m.evaluate(ZonedDateTime.of(2026, 6, 9, 23, 59, 0, 0, place.zone).toInstant().toEpochMilli(), place, it)
+        }.palette.values
+        val afterMidnight = at(0)
+        for (i in afterMidnight.indices) assertEquals(beforeMidnight[i], afterMidnight[i], 0.06f)
+    }
+
+    @Test
     fun sunIsUpAtNoonAndMoonAtNight() {
         val day = eval(13, 0)
         assertEquals(1f, day.sunVisibility, 1e-3f)

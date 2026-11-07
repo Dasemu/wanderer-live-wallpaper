@@ -22,6 +22,7 @@ class RenderLoop(private val controller: SceneController) {
     private lateinit var choreographer: Choreographer
 
     private var rendererReady = false
+    private var nativeWindow: Any? = null
     private var visible = false
     private var frameScheduled = false
     private var lastFrameNanos = 0L
@@ -37,9 +38,10 @@ class RenderLoop(private val controller: SceneController) {
         handler.post { choreographer = Choreographer.getInstance() }
     }
 
-    fun surfaceCreated(nativeWindow: Any) = runBlocking {
+    fun surfaceCreated(window: Any) = runBlocking {
+        nativeWindow = window
         egl.init()
-        egl.createSurface(nativeWindow)
+        egl.createSurface(window)
         if (!rendererReady) {
             renderer.onSurfaceCreated()
             rendererReady = true
@@ -49,7 +51,7 @@ class RenderLoop(private val controller: SceneController) {
     fun surfaceChanged(w: Int, h: Int) = handler.post {
         width = w
         height = h
-        if (!egl.hasSurface) return@post
+        if (!egl.hasSurface || !rendererReady) return@post
         renderer.onSurfaceChanged(w, h)
         controller.onLayout(renderer)
         lastFrameNanos = 0
@@ -61,6 +63,7 @@ class RenderLoop(private val controller: SceneController) {
     fun surfaceDestroyed() = runBlocking {
         cancelFrame()
         egl.releaseSurface()
+        nativeWindow = null
     }
 
     fun setVisible(v: Boolean) = handler.post {
@@ -79,12 +82,13 @@ class RenderLoop(private val controller: SceneController) {
     fun quit() = handler.post {
         cancelFrame()
         if (rendererReady && egl.hasSurface) renderer.release()
+        rendererReady = false
         egl.release()
         thread.quitSafely()
     }
 
     private fun onFrame(now: Long) {
-        if (!visible || !egl.hasSurface || width == 0) return
+        if (!visible || !egl.hasSurface || !rendererReady || width == 0) return
         val interval = 1_000_000_000L / controller.fps
         val elapsed = now - lastFrameNanos
         if (lastFrameNanos != 0L && elapsed < interval - VSYNC_SLACK_NANOS) {
@@ -102,11 +106,25 @@ class RenderLoop(private val controller: SceneController) {
     private fun renderFrame(dt: Float) {
         controller.prepareFrame(dt, input, renderer)
         renderer.draw(controller.sky, input)
-        if (!egl.swap()) {
-            Log.w(TAG, "EGL context lost, recreating")
-            rendererReady = false
-            egl.release()
-            visible = false
+        if (!egl.swap()) recreateAfterContextLoss()
+    }
+
+    /** GPU reset or driver context loss: rebuild EGL and every GL object on the same window. */
+    private fun recreateAfterContextLoss() {
+        Log.w(TAG, "EGL context lost, recreating")
+        rendererReady = false
+        egl.release()
+        val window = nativeWindow ?: return
+        try {
+            egl.init()
+            egl.createSurface(window)
+            renderer.onSurfaceCreated()
+            rendererReady = true
+            renderer.onSurfaceChanged(width, height)
+            controller.onLayout(renderer)
+            lastFrameNanos = 0
+        } catch (e: RuntimeException) {
+            Log.e(TAG, "Could not recreate the GL context", e)
         }
     }
 
@@ -124,7 +142,8 @@ class RenderLoop(private val controller: SceneController) {
 
     private fun runBlocking(block: () -> Unit) {
         val latch = CountDownLatch(1)
-        handler.post {
+        // After quit() the looper is gone and post() fails; waiting would hang the caller forever.
+        val posted = handler.post {
             try {
                 block()
             } catch (e: RuntimeException) {
@@ -133,7 +152,7 @@ class RenderLoop(private val controller: SceneController) {
                 latch.countDown()
             }
         }
-        latch.await()
+        if (posted) latch.await()
     }
 
     companion object {

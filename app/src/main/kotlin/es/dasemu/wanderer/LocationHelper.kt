@@ -25,7 +25,7 @@ object LocationHelper {
     fun placeFromPrefs(context: Context): Place {
         val p = Prefs.get(context)
         if (p.getString(Prefs.HOURS_MODE, Prefs.MODE_FIXED) != Prefs.MODE_LOCATION) return Place.MADRID
-        if (!p.contains(Prefs.LATITUDE)) return Place.MADRID
+        if (!p.contains(Prefs.LATITUDE) || !hasPermission(context)) return Place.MADRID
         return Place(
             p.getFloat(Prefs.LATITUDE, 0f).toDouble(),
             p.getFloat(Prefs.LONGITUDE, 0f).toDouble(),
@@ -33,7 +33,11 @@ object LocationHelper {
         )
     }
 
-    /** Refreshes the stored location if location mode is on and the last fix is old. Safe to call often. */
+    /**
+     * Refreshes the stored location if location mode is on and the last fix is old. Safe to call often.
+     * From the wallpaper (no activity in front) Android treats this as background access, so a fresh
+     * fix may not arrive; the last known (passive) fix still updates it, and Settings forces a refresh.
+     */
     fun refreshIfStale(context: Context, force: Boolean = false) {
         val p = Prefs.get(context)
         if (p.getString(Prefs.HOURS_MODE, Prefs.MODE_FIXED) != Prefs.MODE_LOCATION) return

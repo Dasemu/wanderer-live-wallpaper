@@ -47,14 +47,6 @@ jobs:
             git push origin "v$v"
           fi
           echo "version=$v" >> "$GITHUB_OUTPUT"
-      - name: Sync development with main
-        if: github.ref_name == 'main'
-        run: |
-          git fetch origin development
-          git checkout -B development origin/development
-          git merge --no-edit -m "chore: merge main into development [skip ci]" origin/main
-          git push origin development
-
   # Production release: every version that lands on main gets a signed, minified APK on GitHub Releases.
   release:
     needs: bump
@@ -91,3 +83,23 @@ jobs:
         run: |
           cp app/build/outputs/apk/release/app-release.apk "wanderer-$VERSION.apk"
           gh release create "v$VERSION" "wanderer-$VERSION.apk" --title "v$VERSION" --generate-notes
+
+  # Separate from the bump so a merge conflict here never blocks the release.
+  sync-development:
+    needs: bump
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Merge main into development
+        run: |
+          git fetch origin main development
+          git checkout -B development origin/development
+          git merge --no-edit -m "chore: merge main into development [skip ci]" origin/main
+          git push origin development
