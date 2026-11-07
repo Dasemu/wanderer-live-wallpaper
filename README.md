@@ -6,7 +6,8 @@ for the time of day: blue at noon, gold and orange at sunset, moonlit at night. 
 from your coarse location, or from Madrid's hours if you don't share it.
 
 - Kotlin, minSdk 29, no third-party runtime dependencies.
-- Battery-friendly: 30 fps cap (15 optional), no rendering while hidden, cheaper fog in battery saver.
+- Battery-friendly: 30 fps cap (15 optional), no rendering while hidden. In battery saver the fog stands
+  still and the wallpaper redraws only every 30 s, so the light still follows the clock.
 - Settings screen with a live preview, a time-of-day slider, cloud speed and frame rate.
 
 ## Quick start

@@ -38,6 +38,9 @@ class SkyModel(palettes: Map<String, Palette>) {
     /** Screen-space (uv, y up) height of the horizon; the renderer updates it on resize. */
     var horizon = 0.4f
 
+    /** Screen-space height the moon never goes below: just above the summits, which read as sky. */
+    var moonFloor = 0.55f
+
     private class Key(var minute: Double, val palette: Palette)
 
     private val night = palettes.getValue("night")
@@ -88,7 +91,7 @@ class SkyModel(palettes: Map<String, Palette>) {
         val nightProgress = ((minute - sunset).mod(1440.0)) / nightLength
         val moonArc = if (nightProgress in 0.0..1.0) sin(PI * nightProgress) else -0.3
         out.moonX = (0.15 + 0.7 * nightProgress.coerceIn(0.0, 1.0)).toFloat()
-        out.moonY = (horizon - 0.04 + 0.42 * moonArc).toFloat()
+        out.moonY = (moonFloor + 0.03 + 0.3 * moonArc.coerceAtLeast(0.0)).toFloat()
         out.moonPhase = Solar.moonPhase(epochMillis).toFloat()
         out.moonVisibility = (smoothstep(-3.0, -9.0, elevation) * smoothstep(-0.1, 0.15, moonArc)).toFloat()
 

@@ -1,6 +1,7 @@
 {
-  "_comment": "Scene layout. Painting coordinates: u 0..1 left to right, v 0..1 top to bottom.",
+  "_comment": "Scene layout. Painting coordinates: u 0..1 left to right, v 0..1 top to bottom. moonFloor: painting v the moon never goes below (just above the highest summit, which is too pale to mask).",
   "horizon": 0.44,
+  "moonFloor": 0.2,
   "skyRef": 0.594,
   "visibleWidth": 0.8,
   "parallax": { "plate": 1.0, "mid": 1.0, "fg": 1.0, "fogSea": 0.04, "fogWisps": 0.08 },

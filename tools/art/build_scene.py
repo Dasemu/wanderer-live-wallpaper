@@ -151,10 +151,22 @@ def segment_painting(img):
     # Far mountains (incl. the rock pinnacle on the right): mid-toned, in the horizon band.
     band = smoothstep(228, 250, ys) * smoothstep(432, 405, ys)
     far = smoothstep(206, 168, L) * band * (1 - fg) * (1 - mid)
+    # The big mountain's summit and the rock pinnacle are nearly as pale as the sky, so the threshold
+    # misses them; their traced outlines keep the sun, moon and stars behind them.
+    peaks = polygon_mask(img.shape, [
+        [(0, 287), (30, 293), (70, 299), (110, 297), (140, 287), (165, 271), (185, 258), (197, 251),
+         (212, 250), (225, 255), (240, 265), (262, 278), (285, 290), (310, 304), (335, 320), (360, 334),
+         (360, 345), (0, 345)],
+        [(522, 340), (526, 330), (526, 305), (531, 299), (553, 299), (556, 307), (566, 309), (572, 320),
+         (573, 338), (582, 350), (600, 356), (520, 356)],
+    ], k).astype(np.float32) / 255.0
+    # Fade out downward: below the summits the mountains dissolve into the haze anyway.
+    peaks = cv2.GaussianBlur(peaks, (0, 0), 1.5) * smoothstep(350, 305, ys) * (1 - fg)
+    far = np.maximum(far, peaks)
     far = cv2.GaussianBlur(far.astype(np.float32), (0, 0), 3)
 
     # Sky weight: the painted sky above the mountains (relit as sky rather than as fog).
-    sky = smoothstep(395, 300, ys) * np.ones_like(L) * (1 - far) * (1 - fg)
+    sky = smoothstep(395, 300, ys) * np.ones_like(L) * (1 - far) * (1 - peaks) * (1 - fg)
     sky = cv2.GaussianBlur(sky.astype(np.float32), (0, 0), 6)
     return mid, fg, sky, far
 

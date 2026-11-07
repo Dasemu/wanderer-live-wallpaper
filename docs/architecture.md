@@ -34,7 +34,9 @@ smoothstep. It re-evaluates once per second, not every frame. Places:
 ## Threads and battery
 
 `render/RenderLoop.kt` owns a GL thread with EGL. Frames come from `Choreographer.postFrameCallbackDelayed`,
-so the thread sleeps between frames at the fps cap instead of waking on every vsync. Frames stop while the
+so the thread sleeps between frames at the fps cap instead of waking on every vsync. In battery saver all
+motion freezes and a frame is drawn every 30 s (only the time-of-day light changes); settings or power-mode
+changes force an immediate frame. Frames stop while the
 wallpaper is hidden. Settings flow through SharedPreferences into `SceneController`, which the GL thread
 reads each frame.
 

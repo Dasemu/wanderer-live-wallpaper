@@ -25,6 +25,7 @@ class RenderLoop(private val controller: SceneController) {
     private var nativeWindow: Any? = null
     private var visible = false
     private var frameScheduled = false
+    private var forceNextFrame = false
     private var lastFrameNanos = 0L
     private var width = 0
     private var height = 0
@@ -76,8 +77,12 @@ class RenderLoop(private val controller: SceneController) {
         }
     }
 
-    /** Draw again soon, e.g. after a settings change. */
-    fun requestRender() = handler.post { if (!frameScheduled) scheduleFrame(0) }
+    /** Draw now, even mid-way through a long battery-saver wait (settings or power mode changed). */
+    fun requestRender() = handler.post {
+        forceNextFrame = true
+        cancelFrame()
+        scheduleFrame(0)
+    }
 
     fun quit() = handler.post {
         cancelFrame()
@@ -89,9 +94,11 @@ class RenderLoop(private val controller: SceneController) {
 
     private fun onFrame(now: Long) {
         if (!visible || !egl.hasSurface || !rendererReady || width == 0) return
-        val interval = 1_000_000_000L / controller.fps
+        val interval = controller.frameIntervalNanos
         val elapsed = now - lastFrameNanos
-        if (lastFrameNanos != 0L && elapsed < interval - VSYNC_SLACK_NANOS) {
+        val forced = forceNextFrame
+        forceNextFrame = false
+        if (!forced && lastFrameNanos != 0L && elapsed < interval - VSYNC_SLACK_NANOS) {
             scheduleFrame((interval - elapsed) / 1_000_000 - 2)
             return
         }

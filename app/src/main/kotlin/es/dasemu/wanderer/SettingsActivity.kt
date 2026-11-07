@@ -193,6 +193,7 @@ class SettingsActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeL
     private val powerReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context, intent: Intent) {
             controller.lowPower = getSystemService(PowerManager::class.java).isPowerSaveMode
+            loop.requestRender()
         }
     }
 

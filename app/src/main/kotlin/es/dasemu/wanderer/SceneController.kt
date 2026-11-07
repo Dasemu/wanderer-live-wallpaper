@@ -34,6 +34,13 @@ class SceneController(val context: Context) {
     @Volatile var zoom = 0f
 
     @Volatile private var skyDirty = true
+
+    /**
+     * Battery saver freezes the fog and redraws only every 30 s, enough for the time-of-day colours
+     * (they change over minutes). Otherwise the user's fps cap applies.
+     */
+    val frameIntervalNanos: Long
+        get() = if (lowPower) POWER_SAVE_INTERVAL_NANOS else 1_000_000_000L / fps
     private var parallax = 0.5f
     private var lastSkyEvalMs = 0L
 
@@ -50,6 +57,7 @@ class SceneController(val context: Context) {
     fun onLayout(renderer: SceneRenderer) {
         renderer.updateLayout(parallax)
         model.horizon = renderer.screenHorizon
+        model.moonFloor = renderer.screenMoonFloor
         skyDirty = true
     }
 
@@ -59,7 +67,7 @@ class SceneController(val context: Context) {
         input.deltaSeconds = dt
         input.parallax = parallax
         input.zoom = zoom
-        input.cloudSpeed = cloudSpeed
+        input.cloudSpeed = if (lowPower) 0f else cloudSpeed
         input.lowPower = lowPower
 
         // Colours move over minutes, so re-evaluating the sky once a second is plenty.
@@ -68,6 +76,7 @@ class SceneController(val context: Context) {
             skyDirty = false
             lastSkyEvalMs = now
             model.horizon = renderer.screenHorizon
+            model.moonFloor = renderer.screenMoonFloor
             model.evaluate(effectiveTime(now), place, sky)
         }
     }
@@ -80,4 +89,8 @@ class SceneController(val context: Context) {
     }
 
     private fun asset(path: String) = context.assets.open(path).bufferedReader().use { it.readText() }
+
+    companion object {
+        private const val POWER_SAVE_INTERVAL_NANOS = 30_000_000_000L
+    }
 }

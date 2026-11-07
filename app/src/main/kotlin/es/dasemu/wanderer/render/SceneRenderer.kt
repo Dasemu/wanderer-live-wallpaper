@@ -60,6 +60,8 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
 
     var screenHorizon = 0.4f
         private set
+    var screenMoonFloor = 0.6f
+        private set
 
     fun onSurfaceCreated() {
         val vs = asset("shaders/fullscreen.vert")
@@ -103,12 +105,14 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
         LayerMapping.rect(rectMid, width, height, paintAspect, config.visibleWidth, config.cropAnchorV, parallax, config.parallaxMid)
         LayerMapping.rect(rectFg, width, height, paintAspect, config.visibleWidth, config.cropAnchorV, parallax, config.parallaxFg)
         screenHorizon = LayerMapping.screenY(rectPlate, config.horizon)
+        screenMoonFloor = LayerMapping.screenY(rectPlate, config.moonFloor)
     }
 
     fun draw(sky: SkyState, input: FrameInput) {
         if (width == 0) return
         if (input.lowPower != fogLowPower) allocateFog(input.lowPower)
-        advanceClocks(input.deltaSeconds * input.cloudSpeed, input.deltaSeconds)
+        // Battery saver: everything stands still (fog, flow, twinkle); only the light changes.
+        advanceClocks(input.deltaSeconds * input.cloudSpeed, if (input.lowPower) 0f else input.deltaSeconds)
         updateLayout(input.parallax)
 
         // Pass 1: fog densities at low resolution.

@@ -5,6 +5,7 @@ import org.json.JSONObject
 /** Layout and motion tuning from assets/scene.json (see the comment in that file). */
 class SceneConfig(
     val horizon: Float,
+    val moonFloor: Float,
     val skyRef: Float,
     val visibleWidth: Float,
     val parallaxPlate: Float,
@@ -32,6 +33,7 @@ class SceneConfig(
             }
             return SceneConfig(
                 horizon = o.getDouble("horizon").toFloat(),
+                moonFloor = o.getDouble("moonFloor").toFloat(),
                 skyRef = o.getDouble("skyRef").toFloat(),
                 visibleWidth = o.getDouble("visibleWidth").toFloat(),
                 parallaxPlate = parallax.getDouble("plate").toFloat(),

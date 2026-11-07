@@ -23,6 +23,7 @@ class WandererWallpaperService : WallpaperService() {
         private val powerReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 controller.lowPower = power.isPowerSaveMode
+                loop.requestRender()
             }
         }
 
