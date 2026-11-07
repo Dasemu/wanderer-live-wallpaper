@@ -74,7 +74,8 @@ def segment_painting(img):
     fg_core = (lab_cc == lab_cc[h - 5, w // 2]).astype(np.uint8) * 255
     # Lit edges of the coat (teal highlights on the shoulders) are lighter than the core: grow into
     # nearby pixels that are not fog-like (fog is pale and unsaturated).
-    not_fog = ((L < 140) | (sat > 70)).astype(np.uint8) * 255
+    # Only on the figure: on the crag the same rule eats shadowed fog in its crevices.
+    not_fog = (((L < 112) | ((sat > 80) & (L < 175))) & (ys < 560)).astype(np.uint8) * 255
     for _ in range(3):
         fg_core = fg_core | (cv2.dilate(fg_core, np.ones((9, 9), np.uint8)) & not_fog)
     # Hair and face are light; the walking stick is thin and mid-toned.
@@ -112,14 +113,17 @@ def segment_painting(img):
     pale = smoothstep(120, 160, L) * (1 - smoothstep(50, 90, sat))
     keep = head | stick | neck
     fg = np.where(zone & ~keep, fg * (1 - pale), fg)
+    # Between the legs only the dark trousers are solid; grey fog there must stay see-through.
+    # (the shadowed fog there is mid-grey, L ~95-125; the trousers are ~50)
+    fg = np.where(legs_gap > 0, fg * smoothstep(88, 66, L), fg)
     fg = cv2.GaussianBlur(fg.astype(np.float32), (0, 0), 0.8)
 
     # Mid rocks and trees: darker than the fog, inside two hand-drawn hulls.
     hulls = polygon_mask(img.shape, [
-        [(0, 395), (120, 395), (215, 470), (290, 520), (290, 600), (0, 600)],
-        [(415, 432), (700, 432), (700, 548), (415, 548)],
+        [(0, 395), (120, 395), (215, 470), (300, 515), (310, 625), (0, 625)],
+        [(405, 425), (700, 425), (700, 560), (405, 560)],
     ], k)
-    fg_zone = cv2.dilate((fg > 0.05).astype(np.uint8), np.ones((int(6 * k), int(6 * k)), np.uint8))
+    fg_zone = cv2.dilate((fg > 0.5).astype(np.uint8), np.ones((3, 3), np.uint8))
     mid = smoothstep(178, 112, L) * (hulls > 0) * (1 - fg_zone)
     mid = cv2.GaussianBlur(mid.astype(np.float32), (0, 0), 1.0)
 
