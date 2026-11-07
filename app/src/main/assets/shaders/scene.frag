@@ -227,7 +227,9 @@ void main() {
         vec3 rc = toLinear(texture(uBase, pm).rgb);
         ma = solidAlpha(ma, rc, 0.3, 0.6);
         rc *= uAmbient;
-        float rim = clamp(ma - texture(uMask, pm + lightDirPaint * 0.005).r, 0.0, 1.0);
+        vec4 towardLight = texture(uMask, pm + lightDirPaint * 0.005);
+        // No rim where the wanderer stands between the rock and the light: it would outline him.
+        float rim = clamp(ma - towardLight.r, 0.0, 1.0) * (1.0 - smoothstep(0.05, 0.3, towardLight.g));
         rc += uLightColor * rim * 0.5 * rimK;
         rc = mix(rc, mix(uFogShadow, uFogLit, 0.5), uHaze * 0.3);
         col = mix(col, rc, ma);
