@@ -31,8 +31,8 @@ for(const [k,v] of [[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.
 const fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,fogTex,0);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 const lin=h=>{const n=parseInt(h.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255].map(v=>{v/=255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);});};
 const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
-// Madrid, early November (matches SkyModel's keyframe layout).
-const Rm=8*60+1, Nm=13*60+12, Sm=18*60+23;
+// Madrid on 7 November (from Solar.kt); the app computes these for every day and place.
+const Rm=7*60+52, Nm=12*60+58, Sm=18*60+5;
 const keys=[[Rm-100,'night'],[Rm-40,'dawn'],[Rm,'sunrise'],[Math.min(Rm+120,(Rm+Nm)/2),'morning'],[Nm,'noon'],[Math.max(Sm-70,(Nm+Sm)/2),'golden'],[Sm,'sunset'],[Sm+40,'dusk'],[Sm+100,'night']];
 function palette(m){if(m<keys[0][0]||m>=keys[8][0])return mk(pal.night,pal.night,0);for(let i=0;i<8;i++)if(m>=keys[i][0]&&m<keys[i+1][0])return mk(pal[keys[i][1]],pal[keys[i+1][1]],sm(keys[i][0],keys[i+1][0],m));}
 function mk(a,b,t){const o={};for(const k in a){o[k]=typeof a[k]==='string'?lin(a[k]).map((v,i)=>v+(lin(b[k])[i]-v)*t):a[k]+(b[k]-a[k])*t;}return o;}

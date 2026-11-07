@@ -21,4 +21,8 @@
     <string name="place_here">Your location</string>
     <string name="sun_times">%1$s today: sunrise %2$s, sunset %3$s</string>
     <string name="set_wallpaper">Set as wallpaper</string>
+    <string name="lock_title">Lock screen follows the time of day</string>
+    <string name="lock_description">For phones that can\'t show live wallpapers on the lock screen: sets a still of the scene there and refreshes it at dawn, sunrise, morning, noon, golden hour, sunset, dusk and night.</string>
+    <string name="lock_now">Update lock screen now</string>
+    <string name="lock_done">Lock screen updated</string>
 </resources>

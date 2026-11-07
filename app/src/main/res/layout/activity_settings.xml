@@ -127,6 +127,30 @@
                 android:textColor="#8A90A0"
                 android:textSize="13sp" />
 
+            <Switch
+                android:id="@+id/lock_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:minHeight="48dp"
+                android:text="@string/lock_title"
+                android:textColor="#E6E8EF"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/lock_description"
+                android:textColor="#8A90A0"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/lock_now"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/lock_now" />
+
             <Button
                 android:id="@+id/set_wallpaper"
                 android:layout_width="match_parent"

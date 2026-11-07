@@ -9,6 +9,8 @@ from your coarse location, or from Madrid's hours if you don't share it.
 - Battery-friendly: 30 fps cap (15 optional), no rendering while hidden. In battery saver the fog stands
   still and the wallpaper redraws only every 30 s, so the light still follows the clock.
 - Settings screen with a live preview, a time-of-day slider, cloud speed and frame rate.
+- Lock screen: where the system doesn't allow live wallpapers there (e.g. Honor MagicOS), an option sets
+  a still of the scene on the lock screen and refreshes it at each light phase of the day.
 
 ## Quick start
 

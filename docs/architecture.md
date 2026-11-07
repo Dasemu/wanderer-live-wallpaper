@@ -40,6 +40,13 @@ changes force an immediate frame. Frames stop while the
 wallpaper is hidden. Settings flow through SharedPreferences into `SceneController`, which the GL thread
 reads each frame.
 
+## Lock screen stills
+
+`lock/LockScreenUpdater` renders one frame off screen (EGL pbuffer, same `SceneRenderer`) at the screen's
+size and sets it with `WallpaperManager.setBitmap(..., FLAG_LOCK)`. It reschedules itself with an inexact
+`AlarmManager.setWindow` for the next light phase (`SkyModel.keyframeInstants`): about 8 renders a day.
+Boot, clock and time-zone changes reschedule it (`LockScreenReceiver`).
+
 ## Dev preview
 
 `tools/preview/index.html` runs the same GLSL in WebGL2, with a time slider. Add `?sheet=480,780,1080`

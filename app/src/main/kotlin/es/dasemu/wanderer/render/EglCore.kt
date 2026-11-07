@@ -17,7 +17,8 @@ class EglCore {
     val hasContext get() = context != EGL14.EGL_NO_CONTEXT
     val hasSurface get() = surface != EGL14.EGL_NO_SURFACE
 
-    fun init() {
+    /** [offscreen]: choose a config that can also back a pbuffer (used for lock-screen snapshots). */
+    fun init(offscreen: Boolean = false) {
         if (hasContext) return
         display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
         val version = IntArray(2)
@@ -26,7 +27,7 @@ class EglCore {
             EGL14.EGL_RED_SIZE, 8, EGL14.EGL_GREEN_SIZE, 8, EGL14.EGL_BLUE_SIZE, 8,
             EGL14.EGL_ALPHA_SIZE, 0, EGL14.EGL_DEPTH_SIZE, 0, EGL14.EGL_STENCIL_SIZE, 0,
             EGL14.EGL_RENDERABLE_TYPE, EGLExt.EGL_OPENGL_ES3_BIT_KHR,
-            EGL14.EGL_SURFACE_TYPE, EGL14.EGL_WINDOW_BIT,
+            EGL14.EGL_SURFACE_TYPE, if (offscreen) EGL14.EGL_PBUFFER_BIT else EGL14.EGL_WINDOW_BIT,
             EGL14.EGL_NONE,
         )
         val configs = arrayOfNulls<EGLConfig>(1)
@@ -47,6 +48,14 @@ class EglCore {
         releaseSurface()
         surface = EGL14.eglCreateWindowSurface(display, config, nativeWindow, intArrayOf(EGL14.EGL_NONE), 0)
         check(surface != EGL14.EGL_NO_SURFACE) { "eglCreateWindowSurface failed: ${EGL14.eglGetError()}" }
+        check(EGL14.eglMakeCurrent(display, surface, surface, context)) { "eglMakeCurrent failed" }
+    }
+
+    fun createOffscreenSurface(width: Int, height: Int) {
+        releaseSurface()
+        val attribs = intArrayOf(EGL14.EGL_WIDTH, width, EGL14.EGL_HEIGHT, height, EGL14.EGL_NONE)
+        surface = EGL14.eglCreatePbufferSurface(display, config, attribs, 0)
+        check(surface != EGL14.EGL_NO_SURFACE) { "eglCreatePbufferSurface failed: ${EGL14.eglGetError()}" }
         check(EGL14.eglMakeCurrent(display, surface, surface, context)) { "eglMakeCurrent failed" }
     }
 

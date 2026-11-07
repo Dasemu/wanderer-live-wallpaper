@@ -108,6 +108,17 @@ class SkyModel(palettes: Map<String, Palette>) {
         }
     }
 
+    /**
+     * The moments the light changes character on [date] (dawn ... night), as epoch millis. Used to
+     * refresh the static lock-screen picture at the start of each phase.
+     */
+    fun keyframeInstants(date: LocalDate, place: Place): List<Long> {
+        layoutKeys(resolveTimes(date, place))
+        cachedDate = null // keys were laid out for a possibly different day: force a refresh
+        val midnight = date.atStartOfDay(place.zone).toInstant().toEpochMilli()
+        return keys.drop(1).map { midnight + (it.minute * 60_000).toLong() }
+    }
+
     private fun resolveTimes(date: LocalDate, place: Place): SunTimes {
         val t = Solar.sunTimes(date, place.latitude, place.longitude, place.zone)
         if (t.sunrise != null && t.sunset != null) return t

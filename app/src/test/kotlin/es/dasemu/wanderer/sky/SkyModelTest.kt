@@ -79,6 +79,17 @@ class SkyModelTest {
     }
 
     @Test
+    fun keyframeInstantsAreOrderedAndInsideTheDayAroundSun() {
+        val day = java.time.LocalDate.of(2026, 11, 7)
+        val keys = SkyModel(palettes).keyframeInstants(day, madrid)
+        assertEquals(8, keys.size)
+        assertTrue(keys.zipWithNext().all { (a, b) -> a < b })
+        val sunrise = ZonedDateTime.of(2026, 11, 7, 7, 52, 0, 0, madrid.zone).toInstant().toEpochMilli()
+        // Second key is sunrise itself (dawn, sunrise, ...). Reference: 07:52 CET.
+        assertEquals(sunrise.toDouble(), keys[1].toDouble(), 3 * 60_000.0)
+    }
+
+    @Test
     fun paletteParsingConvertsSrgbToLinear() {
         val white = Palette.srgbToLinear(1f)
         val mid = Palette.srgbToLinear(0.5f)

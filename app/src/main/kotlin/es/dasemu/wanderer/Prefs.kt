@@ -10,6 +10,7 @@ object Prefs {
     const val LATITUDE = "latitude"
     const val LONGITUDE = "longitude"
     const val LOCATION_TIME = "location_time"
+    const val LOCK_SCREEN = "lock_screen"
 
     const val MODE_FIXED = "fixed"
     const val MODE_LOCATION = "location"

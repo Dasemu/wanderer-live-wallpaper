@@ -18,6 +18,8 @@ import android.widget.CompoundButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
+import es.dasemu.wanderer.lock.LockScreenUpdater
 import es.dasemu.wanderer.render.RenderLoop
 import java.util.Locale
 
@@ -58,6 +60,7 @@ class SettingsActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeL
         setUpFps()
         setUpSpeed()
         setUpHours()
+        setUpLockScreen()
         findViewById<Button>(R.id.set_wallpaper).setOnClickListener {
             startActivity(
                 Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).putExtra(
@@ -161,6 +164,28 @@ class SettingsActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeL
             }
         }
         updateSunLabel()
+    }
+
+    private fun setUpLockScreen() {
+        val switch = findViewById<CompoundButton>(R.id.lock_switch)
+        val now = findViewById<Button>(R.id.lock_now)
+        switch.isChecked = LockScreenUpdater.isEnabled(this)
+        now.isEnabled = switch.isChecked
+        switch.setOnCheckedChangeListener { _, on ->
+            prefs.edit().putBoolean(Prefs.LOCK_SCREEN, on).apply()
+            now.isEnabled = on
+            if (on) updateLockScreen() else LockScreenUpdater.scheduleNext(this)
+        }
+        now.setOnClickListener { updateLockScreen() }
+    }
+
+    private fun updateLockScreen() {
+        val app = applicationContext
+        Thread {
+            LockScreenUpdater.updateNow(app)
+            LockScreenUpdater.scheduleNext(app)
+            runOnUiThread { Toast.makeText(app, R.string.lock_done, Toast.LENGTH_SHORT).show() }
+        }.start()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

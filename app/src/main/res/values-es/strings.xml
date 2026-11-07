@@ -21,4 +21,8 @@
     <string name="place_here">Tu ubicación</string>
     <string name="sun_times">%1$s hoy: amanece a las %2$s, anochece a las %3$s</string>
     <string name="set_wallpaper">Establecer como fondo de pantalla</string>
+    <string name="lock_title">Pantalla de bloqueo según la hora</string>
+    <string name="lock_description">Para móviles que no admiten fondos animados en la pantalla de bloqueo: pone una imagen fija de la escena y la actualiza al alba, al amanecer, por la mañana, a mediodía, en la hora dorada, al atardecer, al anochecer y de noche.</string>
+    <string name="lock_now">Actualizar ahora la pantalla de bloqueo</string>
+    <string name="lock_done">Pantalla de bloqueo actualizada</string>
 </resources>
