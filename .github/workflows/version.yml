@@ -1,0 +1,50 @@
+name: Version
+
+on:
+  push:
+    branches: [development, main]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Decide bump
+        id: kind
+        run: |
+          kind=patch
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            git fetch origin development
+            # Every pushed commit already on development => promotion PR => minor bump.
+            if [ -z "$(git rev-list ${{ github.event.before }}..${{ github.sha }} --not origin/development 2>/dev/null)" ]; then
+              kind=minor
+            fi
+          fi
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
+      - name: Bump VERSION
+        id: bump
+        run: |
+          IFS=. read -r MA MI PA < VERSION
+          if [ "${{ steps.kind.outputs.kind }}" = "minor" ]; then MI=$((MI+1)); PA=0; else PA=$((PA+1)); fi
+          v="$MA.$MI.$PA"
+          echo "$v" > VERSION
+          git commit -am "chore(release): v$v [skip ci]"
+          git push origin HEAD:${GITHUB_REF_NAME}
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Sync development with main
+        if: github.ref_name == 'main'
+        run: |
+          git fetch origin development
+          git checkout -B development origin/development
+          git merge --no-edit -m "chore: merge main into development [skip ci]" origin/main
+          git push origin development
