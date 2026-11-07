@@ -62,7 +62,10 @@ class WandererWallpaperService : WallpaperService() {
             xOffset: Float, yOffset: Float, xOffsetStep: Float, yOffsetStep: Float,
             xPixelOffset: Int, yPixelOffset: Int,
         ) {
-            controller.parallaxTarget = xOffset
+            // A single home page reports offset 0 (step 0 or >= 1): centre the painting instead of
+            // pinning it to the left edge.
+            val singlePage = xOffsetStep <= 0f || xOffsetStep >= 1f
+            controller.parallaxTarget = if (singlePage || isPreview) 0.5f else xOffset
         }
 
         // Called by API 30+ launchers when the home screen zooms out (e.g. opening the app drawer).

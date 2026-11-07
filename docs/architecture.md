@@ -16,8 +16,11 @@
 
    It ends with a vignette, a soft highlight shoulder, gamma and dithering.
 
-Each layer maps screen uv to painting uv through its own rect (`LayerMapping`), with its own parallax depth.
-On portrait screens the sky extends above the painting.
+Screen uv maps to painting uv through `LayerMapping`. The painting pans as one piece with the home screen,
+because a single painting has nothing behind the wanderer to reveal. Depth comes from the procedural fog
+instead: the fog sea and the wisps pan a little further (`parallax.fogSea` / `fogWisps` in `scene.json`).
+With a single home page (offset step 0 or >= 1), the painting stays centred. On portrait screens the sky
+extends above the painting.
 
 ## Time of day
 

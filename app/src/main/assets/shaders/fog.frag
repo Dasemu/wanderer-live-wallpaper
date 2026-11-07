@@ -15,6 +15,8 @@ uniform vec2 uOffset0;     // per-layer drift, wrapped to the noise period on th
 uniform vec2 uOffset1;
 uniform vec2 uOffset2;
 uniform vec2 uWarp;
+uniform float uParallax;   // home-screen offset - 0.5; the painting pans as one piece, nearer fog pans further
+uniform vec2 uFogDepth;    // extra pan of the fog sea (x) and the wisps (y)
 
 const float PERIOD = 32.0;
 
@@ -80,14 +82,14 @@ void main() {
     }
     // Fog sea that swallows the bases of the mid rocks.
     if (pv.y > h + 0.03 && pv.y < 0.86) {
-        float d = fogPlane(pv, uOffset1, 1.0, 0.5, 0.28);
+        float d = fogPlane(pv + vec2(uParallax * uFogDepth.x, 0.0), uOffset1, 1.0, 0.5, 0.28);
         // Start low: higher up the plane compresses into flat horizontal streaks across the rocks.
         float band = smoothstep(h + 0.16, h + 0.26, pv.y) * smoothstep(0.86, 0.7, pv.y);
         sea = d * band;
     }
     // Thin wisps drifting past the wanderer's crag.
     if (pv.y > 0.5 && pv.y < 0.85) {
-        vec2 p = vec2(pv.x * uAspect * 2.2, pv.y * 4.0);
+        vec2 p = vec2((pv.x + uParallax * uFogDepth.y) * uAspect * 2.2, pv.y * 4.0);
         float n = fbm(p + uOffset2, uOctaves);
         wisps = smoothstep(0.6, 0.88, n) * smoothstep(0.5, 0.6, pv.y) * smoothstep(0.85, 0.72, pv.y);
     }

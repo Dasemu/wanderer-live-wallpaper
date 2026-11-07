@@ -56,7 +56,7 @@ function render(){
  gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.viewport(0,0,fw,fh);gl.useProgram(pFog);
  gl.uniform4fv(u(pFog,'uRect'),rp);gl.uniform1f(u(pFog,'uAspect'),pa);gl.uniform1f(u(pFog,'uHorizon'),cfg.horizon);gl.uniform1i(u(pFog,'uOctaves'),5);
  gl.uniform2f(u(pFog,'uOffset0'),wrap(sec*d.haze[0]*10),wrap(sec*d.haze[1]*10));gl.uniform2f(u(pFog,'uOffset1'),wrap(sec*d.sea[0]*10),wrap(sec*d.sea[1]*10));
- gl.uniform2f(u(pFog,'uOffset2'),wrap(sec*d.wisps[0]*10),wrap(sec*d.wisps[1]*10));gl.uniform2f(u(pFog,'uWarp'),wrap(sec*d.warp[0]*10),wrap(sec*d.warp[1]*10));
+ gl.uniform2f(u(pFog,'uOffset2'),wrap(sec*d.wisps[0]*10),wrap(sec*d.wisps[1]*10));gl.uniform2f(u(pFog,'uWarp'),wrap(sec*d.warp[0]*10),wrap(sec*d.warp[1]*10));gl.uniform1f(u(pFog,'uParallax'),par-0.5);gl.uniform2f(u(pFog,'uFogDepth'),cfg.parallax.fogSea,cfg.parallax.fogWisps);
  gl.drawArrays(gl.TRIANGLES,0,3);
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);gl.useProgram(pScene);
  [[tBase,'uBase'],[tPlate,'uPlate'],[tMask,'uMask'],[fogTex,'uFog']].forEach(([t,n],i)=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,t);gl.uniform1i(u(pScene,n),i);});
@@ -77,7 +77,8 @@ window.setTime=v=>{document.getElementById('t').value=v;};
 window.sheet=(times,w=270)=>{const h=w*H/W,s=document.createElement('canvas');s.width=w*times.length;s.height=h;s.id='sheet';
  const g=s.getContext('2d');times.forEach((m,i)=>{setTime(m);render();g.drawImage(c,i*w,0,w,h);g.fillStyle='#fff';g.font='16px sans-serif';g.fillText(`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`,i*w+6,20);});
  document.getElementById('sheet')?.remove();document.body.prepend(s);return s.toDataURL('image/jpeg',0.85);};
-const q=new URLSearchParams(location.search).get('sheet');
+const qp=new URLSearchParams(location.search);if(qp.get('par'))document.getElementById('px').value=qp.get('par');
+const q=qp.get('sheet');
 if(q){document.getElementById('anim').checked=false;const url=sheet(q.split(",").map(Number),+(new URLSearchParams(location.search).get("w")||300));document.body.innerHTML=`<img src="${url}">`;document.body.style.padding='0';}
 else frame();
 </script></body></html>

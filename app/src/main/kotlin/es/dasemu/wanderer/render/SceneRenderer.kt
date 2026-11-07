@@ -67,7 +67,7 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
         sceneProgram = GlUtil.program(vs, asset("shaders/scene.frag"))
         fogU = GlUtil.uniforms(
             fogProgram, "uRect", "uAspect", "uHorizon", "uOctaves",
-            "uOffset0", "uOffset1", "uOffset2", "uWarp",
+            "uOffset0", "uOffset1", "uOffset2", "uWarp", "uParallax", "uFogDepth",
         )
         sceneU = GlUtil.uniforms(
             sceneProgram, "uBase", "uPlate", "uMask", "uFog", "uRectPlate", "uRectMid", "uRectFg",
@@ -123,6 +123,8 @@ class SceneRenderer(private val context: Context, private val config: SceneConfi
         glUniform2fv(fogU.getValue("uOffset1"), 1, offSea, 0)
         glUniform2fv(fogU.getValue("uOffset2"), 1, offWisps, 0)
         glUniform2fv(fogU.getValue("uWarp"), 1, offWarp, 0)
+        glUniform1f(fogU.getValue("uParallax"), input.parallax - 0.5f)
+        glUniform2f(fogU.getValue("uFogDepth"), config.parallaxFogSea, config.parallaxFogWisps)
         glDrawArrays(GL_TRIANGLES, 0, 3)
 
         // Pass 2: composite at full resolution.
