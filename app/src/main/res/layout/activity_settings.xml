@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextureView
+        android:id="@+id/preview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/preview_description" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.9">
+
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/time_label"
+                style="@style/Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <SeekBar
+                    android:id="@+id/time_seek"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/time_title"
+                    android:max="1439" />
+
+                <Switch
+                    android:id="@+id/time_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/time_override"
+                    android:textColor="#C8CCD8" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/fps_title" />
+
+            <RadioGroup
+                android:id="@+id/fps_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/fps_30"
+                    style="@style/Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/fps_30" />
+
+                <RadioButton
+                    android:id="@+id/fps_15"
+                    style="@style/Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/fps_15" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/speed_label"
+                style="@style/Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
+            <SeekBar
+                android:id="@+id/speed_seek"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:contentDescription="@string/cloud_speed_title"
+                android:max="300" />
+
+            <TextView
+                style="@style/Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/hours_title" />
+
+            <RadioGroup
+                android:id="@+id/hours_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RadioButton
+                    android:id="@+id/hours_fixed"
+                    style="@style/Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/hours_fixed" />
+
+                <RadioButton
+                    android:id="@+id/hours_location"
+                    style="@style/Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/hours_location" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/sun_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#8A90A0"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/set_wallpaper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/set_wallpaper" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

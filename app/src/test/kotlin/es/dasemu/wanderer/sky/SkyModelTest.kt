@@ -1,0 +1,60 @@
+package es.dasemu.wanderer.sky
+
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.io.File
+import java.time.ZonedDateTime
+
+class SkyModelTest {
+    private val palettes = Palette.parseAll(File("src/main/assets/palettes.json").readText())
+    private val model = SkyModel(palettes)
+    private val madrid = Place.MADRID
+
+    private fun at(h: Int, m: Int) =
+        ZonedDateTime.of(2026, 11, 7, h, m, 0, 0, madrid.zone).toInstant().toEpochMilli()
+
+    private fun eval(h: Int, m: Int) = SkyState().also { model.evaluate(at(h, m), madrid, it) }
+
+    @Test
+    fun deepNightIsTheNightPalette() {
+        assertArrayEquals(palettes.getValue("night").values, eval(2, 0).palette.values, 1e-6f)
+        assertArrayEquals(palettes.getValue("night").values, eval(23, 30).palette.values, 1e-6f)
+    }
+
+    @Test
+    fun solarNoonIsTheNoonPalette() {
+        val noon = model.also { eval(12, 0) }.sunTimes().solarNoon
+        val s = eval((noon / 60).toInt(), (noon % 60).toInt())
+        assertArrayEquals(palettes.getValue("noon").values, s.palette.values, 0.01f)
+    }
+
+    @Test
+    fun blendingIsContinuousAcrossTheDay() {
+        var prev = eval(0, 0).palette.values.copyOf()
+        for (minute in 1 until 1440) {
+            val cur = eval(minute / 60, minute % 60).palette.values
+            for (i in cur.indices) assertEquals("minute $minute index $i", prev[i], cur[i], 0.06f)
+            prev = cur.copyOf()
+        }
+    }
+
+    @Test
+    fun sunIsUpAtNoonAndMoonAtNight() {
+        val day = eval(13, 0)
+        assertEquals(1f, day.sunVisibility, 1e-3f)
+        assertTrue(day.sunY > model.horizon)
+        val night = eval(23, 0)
+        assertEquals(0f, night.sunVisibility, 1e-3f)
+        assertTrue(night.moonVisibility > 0.5f)
+    }
+
+    @Test
+    fun paletteParsingConvertsSrgbToLinear() {
+        val white = Palette.srgbToLinear(1f)
+        val mid = Palette.srgbToLinear(0.5f)
+        assertEquals(1f, white, 1e-6f)
+        assertEquals(0.214f, mid, 1e-3f)
+    }
+}

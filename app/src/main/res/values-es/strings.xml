@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Caminante</string>
+    <string name="wallpaper_name">El caminante sobre el mar de nubes</string>
+    <string name="wallpaper_description">El cuadro de Friedrich, vivo: niebla en movimiento y un cielo que sigue la hora del día.</string>
+    <string name="wallpaper_author">Según Caspar David Friedrich (1818)</string>
+    <string name="preview_description">Vista previa del fondo. Desliza en horizontal para ver el efecto de profundidad.</string>
+    <string name="time_title">Hora de la vista previa</string>
+    <string name="time_live">Hora: en directo</string>
+    <string name="time_preview_at">Vista previa a las %1$s</string>
+    <string name="time_override">Fijar</string>
+    <string name="fps_title">Fotogramas por segundo</string>
+    <string name="fps_30">30 fps</string>
+    <string name="fps_15">15 fps (ahorra batería)</string>
+    <string name="cloud_speed_title">Velocidad de las nubes</string>
+    <string name="cloud_speed_value">Velocidad de las nubes: %1$d %%</string>
+    <string name="hours_title">Amanecer y atardecer</string>
+    <string name="hours_fixed">Horario fijo (Madrid)</string>
+    <string name="hours_location">Según mi ubicación</string>
+    <string name="place_madrid">Madrid</string>
+    <string name="place_here">Tu ubicación</string>
+    <string name="sun_times">%1$s hoy: amanece a las %2$s, anochece a las %3$s</string>
+    <string name="set_wallpaper">Establecer como fondo de pantalla</string>
+</resources>

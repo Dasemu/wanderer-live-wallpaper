@@ -1,0 +1,13 @@
+{
+  "_comment": "Time-of-day keyframes in sRGB hex. The app places them around the real sunrise (R), solar noon (N) and sunset (S): night R-100min, dawn R-40, sunrise R, morning R+120, noon N, golden S-70, sunset S, dusk S+40, night S+100. glow = sun halo strength, stars = star visibility 0..1, haze = how much distant layers fade into the horizon colour.",
+  "palettes": {
+    "night":   { "skyTop": "#04070f", "skyHorizon": "#16203a", "sun": "#9fb4e6", "ambient": "#1c2538", "fogLit": "#4a5a7c", "fogShadow": "#121a2c", "glow": 0.0,  "stars": 1.0,  "haze": 0.55 },
+    "dawn":    { "skyTop": "#1d2a52", "skyHorizon": "#c98a86", "sun": "#ffb08a", "ambient": "#6e6884", "fogLit": "#c9a2ac", "fogShadow": "#45476a", "glow": 0.35, "stars": 0.35, "haze": 0.6  },
+    "sunrise": { "skyTop": "#4c6aa6", "skyHorizon": "#ffb27c", "sun": "#ffc890", "ambient": "#c4a08a", "fogLit": "#ffd2ae", "fogShadow": "#7d7090", "glow": 1.0,  "stars": 0.0,  "haze": 0.55 },
+    "morning": { "skyTop": "#5784c4", "skyHorizon": "#cddbe8", "sun": "#fff1dc", "ambient": "#e2e6ea", "fogLit": "#fbfbf8", "fogShadow": "#9cadc4", "glow": 0.55, "stars": 0.0,  "haze": 0.5  },
+    "noon":    { "skyTop": "#4f80c4", "skyHorizon": "#c2d6e8", "sun": "#fffaf0", "ambient": "#f4f2ee", "fogLit": "#ffffff", "fogShadow": "#a4b8d0", "glow": 0.45, "stars": 0.0,  "haze": 0.45 },
+    "golden":  { "skyTop": "#4775b4", "skyHorizon": "#f2cd92", "sun": "#ffd88a", "ambient": "#efcfa0", "fogLit": "#ffe4b4", "fogShadow": "#a8988e", "glow": 0.85, "stars": 0.0,  "haze": 0.5  },
+    "sunset":  { "skyTop": "#34467e", "skyHorizon": "#ff8848", "sun": "#ff7a36", "ambient": "#c98066", "fogLit": "#ffaa78", "fogShadow": "#6e5274", "glow": 1.2,  "stars": 0.0,  "haze": 0.6  },
+    "dusk":    { "skyTop": "#181e46", "skyHorizon": "#9a5674", "sun": "#e07a7a", "ambient": "#52496e", "fogLit": "#8a6a8e", "fogShadow": "#2a2646", "glow": 0.35, "stars": 0.45, "haze": 0.6  }
+  }
+}

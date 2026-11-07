@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wanderer</string>
+    <string name="wallpaper_name">Wanderer above the Sea of Fog</string>
+    <string name="wallpaper_description">Friedrich\'s painting, alive: drifting fog and a sky that follows the time of day.</string>
+    <string name="wallpaper_author">After Caspar David Friedrich (1818)</string>
+    <string name="preview_description">Wallpaper preview. Drag sideways to preview parallax.</string>
+    <string name="time_title">Preview time</string>
+    <string name="time_live">Time: live</string>
+    <string name="time_preview_at">Previewing %1$s</string>
+    <string name="time_override">Fix</string>
+    <string name="fps_title">Frame rate</string>
+    <string name="fps_30">30 fps</string>
+    <string name="fps_15">15 fps (saves battery)</string>
+    <string name="cloud_speed_title">Cloud speed</string>
+    <string name="cloud_speed_value">Cloud speed: %1$d%%</string>
+    <string name="hours_title">Sunrise and sunset</string>
+    <string name="hours_fixed">Fixed (Madrid)</string>
+    <string name="hours_location">From my location</string>
+    <string name="place_madrid">Madrid</string>
+    <string name="place_here">Your location</string>
+    <string name="sun_times">%1$s today: sunrise %2$s, sunset %3$s</string>
+    <string name="set_wallpaper">Set as wallpaper</string>
+</resources>
