@@ -38,7 +38,7 @@ const pa=base.width/base.height;
 function rect(par,depth){const pw=W/cfg.visibleWidth,ph=pw/pa;let sx=W/pw,sy=H/ph,oy=0;
  if(ph<H){oy=-(H-ph)/ph;} else {oy=Math.min(Math.max(cfg.cropAnchorV-0.5*sy,0),1-sy);} 
  const margin=1-sx;const ox=margin/2+(par-0.5)*margin*depth;return [sx,sy,ox,oy];}
-const t0=performance.now();let frozen=0;
+const t0=performance.now();let frozen=+(new URLSearchParams(location.search).get('sec')||0);
 function u(p,n){return gl.getUniformLocation(p,n);}
 function render(){
  const m=+document.getElementById('t').value;document.getElementById('tl').textContent=`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;

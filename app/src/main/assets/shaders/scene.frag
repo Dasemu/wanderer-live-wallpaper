@@ -153,7 +153,15 @@ void main() {
     float ph0 = fract(uFlowTime + fog.a);
     float ph1 = fract(ph0 + 0.5);
     float wf = abs(ph0 - 0.5) * 2.0;
-    vec2 flow = vec2(uFlowFog * (0.3 + depth) * fogW * fogW + uFlowSky * skyW, 0.0);
+    // The plate still holds faint rock and trees behind the fog; flowing them would drag ghost copies
+    // sideways and open seams next to the solid layers, so the painted fog stays still near them.
+    const vec2 R = vec2(0.02, 0.012);
+    vec4 n1 = max(texture(uMask, ppx + vec2(R.x, 0.0)), texture(uMask, ppx - vec2(R.x, 0.0)));
+    vec4 n2 = max(texture(uMask, ppx + vec2(0.0, R.y)), texture(uMask, ppx - vec2(0.0, R.y)));
+    vec4 nm = max(m, max(n1, n2));
+    float near = max(nm.r, nm.g);
+    float still = 1.0 - smoothstep(0.03, 0.35, near);
+    vec2 flow = vec2(uFlowFog * (0.3 + depth) * fogW * fogW * still + uFlowSky * skyW, 0.0);
     vec3 paint = toLinear(mix(texture(uPlate, ppx - flow * ph0).rgb,
                               texture(uPlate, ppx - flow * ph1).rgb, wf));
     float l = dot(paint, LUMA);
