@@ -194,11 +194,15 @@ void main() {
     vec3 grad = mix(uSkyHorizon, uSkyTop, pow(h, 0.6));
     // The mirrored extension above the painting carries fainter cloud detail, hiding the mirror seam.
     float aboveFade = smoothstep(-0.06, 0.2, -pp.y);
-    float ratio = 1.0 + (l / uSkyRef - 1.0) * mix(1.35, 0.45, aboveFade);
+    // Below the land skyline the "sky" is the pale, hazy mountain: keep its contrast low so its outline
+    // stays soft whatever the light (strong contrast is only wanted for the clouds).
+    float clear = aboveSkyline(pp);
+    float ratio = 1.0 + (l / uSkyRef - 1.0) * mix(1.35, 0.45, aboveFade) * mix(0.55, 1.0, clear);
     // Thicker, brighter cloud parts catch the key light (sun by day, moon by night), so the clouds
     // stay readable at night instead of vanishing into the dark gradient.
     float cloudLit = max(ratio - 0.95, 0.0);
     vec3 skyCol = grad * ratio + uSun * uGlow * 0.18 * max(ratio - 1.0, 0.0) + uLightColor * cloudLit * 0.35;
+    skyCol = mix(skyCol, uSkyHorizon, (1.0 - clear) * 0.18);
 
     // Far mountains keep the painted colour under the ambient light, fading into the horizon.
     vec3 farCol = mix(paint * uAmbient, uSkyHorizon, uHaze * 0.55);
@@ -216,7 +220,6 @@ void main() {
     float dsun = length(ds);
     float halo = uGlow * uSunVis * (0.45 * exp(-dsun * 5.0) + 0.4 * exp(-dsun * 18.0));
     float band = uGlow * uSunVis * 0.35 * exp(-abs(uv.y - uScreenHorizon) * 9.0) * exp(-abs(ds.x) * 2.2);
-    float clear = aboveSkyline(pp);
     float sunClear = lightClearance(paintUv(uSunPos, uRectPlate));
     float land = 1.0 - clear;
     col += uSun * (halo * (clear + land * sunClear * 0.5) + band * (clear + land * sunClear));

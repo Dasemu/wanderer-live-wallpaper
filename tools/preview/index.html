@@ -20,7 +20,9 @@ const c = document.getElementById('c'), gl = c.getContext('webgl2',{preserveDraw
 function prog(fs){const p=gl.createProgram();for(const [t,s] of [[gl.VERTEX_SHADER,vs],[gl.FRAGMENT_SHADER,fs]]){const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(sh);gl.attachShader(p,sh);}gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw gl.getProgramInfoLog(p);return p;}
 const pFog = prog(fogFs), pScene = prog(sceneFs);
 function img(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src+bust;});}
-const [base, plate, mask] = await Promise.all([img(R+'scene_base.webp'), img(R+'scene_plate.webp'), img(R+'scene_mask.png')]);
+// The mask's alpha is data (far mountains), not coverage: decode it without premultiplication, like the app.
+const rawImg = src => fetch(src + bust, {cache: 'no-store'}).then(r => r.blob()).then(b => createImageBitmap(b, {premultiplyAlpha: 'none', colorSpaceConversion: 'none'}));
+const [base, plate, mask] = await Promise.all([img(R+'scene_base.webp'), img(R+'scene_plate.webp'), rawImg(R+'scene_mask.png')]);
 function tex(i){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,i);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
 const tBase=tex(base), tPlate=tex(plate), tMask=tex(mask);
 const W=c.width,H=c.height, fw=Math.round(W/3), fh=Math.round(H/3);
@@ -49,7 +51,7 @@ function render(){
  const elev=Math.sin(Math.PI*(m-Rm)/(Sm-Rm))*0.55-0.02; /* rough stand-in for the real elevation, negative all night */const dayP=(m-Rm)/(Sm-Rm);
  const sunX=0.5+(dayP-0.5)*0.9, sunY=screenHorizon+0.42*elev, sunVis=sm(-0.12,0.02,elev);
  const nightLen=1440-(Sm-Rm), np=(((m-Sm)%1440)+1440)%1440/nightLen, arc=np<=1?Math.sin(Math.PI*np):-0.3;
- const moonX=0.15+0.7*Math.min(1,np), moonY=(1-(cfg.moonFloor-rp[3])/rp[1])+0.03+0.3*Math.max(arc,0), moonVis=sm(-0.05,-0.15,elev)*sm(-0.1,0.15,arc), phase=0.42;
+ const moonX=0.15+0.7*Math.min(1,np), moonY=(1-(cfg.moonFloor-rp[3])/rp[1])+0.03+0.3*Math.max(arc,0), moonVis=sm(-0.05,-0.15,elev)*sm(-0.1,0.15,arc), phase=+(new URLSearchParams(location.search).get('phase')||0.42);
  const illum=0.5*(1-Math.cos(2*Math.PI*phase)), mw=moonVis*(0.25+0.75*illum), tot=Math.max(sunVis+mw,1e-4);
  const lx=(sunX*sunVis+moonX*mw)/tot, ly=(sunY*sunVis+moonY*mw)/tot, lc=P.sun.map((v,i)=>v*sunVis+[0.55,0.65,0.9][i]*mw*0.45);
  const wrap=v=>((v%32)+32)%32, d=cfg.drift;
